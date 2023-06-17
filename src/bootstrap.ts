@@ -5,13 +5,22 @@ import logger from "./utilities/logger";
 import Configuration from "./types/configuration.type";
 import { omit } from "lodash";
 import setEnv from "./utilities/dotenv-changer";
-// import { Omit } from "utility-types";
+import figlet from "figlet";
+
+// import chalk from "chalk";
 
 configDotenv();
 
 export default class Bootstrap {
 
     public static async run() {
+
+        console.log(`${figlet.textSync('Algolia CLI', {
+            horizontalLayout: 'full',
+        })}`);
+
+        // console.log("%cThis is a green text", "color:green");
+
         // Start cli interface
         const rl = readline.createInterface({
             input: process.stdin,
@@ -23,16 +32,17 @@ export default class Bootstrap {
         let apiKey = process.env.API_KEY;
 
         if (!appId || !apiKey) {
+
             appId = await rl.question("Welcome to Algolia CLI!\n\nPlease enter your Algolia App ID: ");
             apiKey = await rl.question("Please enter your Algolia API Key: ");
-            // const configuration: Configuration = {appId, apiKey};
-
         }
-        const iX = await rl.question("Please enter your Algolia Index: ");
 
+        const config: Configuration = { appId, apiKey };
+
+        const iX = await rl.question("Please enter your Algolia Index: ");
         console.log('Thanks! Now you can start using Algolia CLI!');
 
-        const client = algoliasearch(appId, apiKey);
+        const client = algoliasearch(config.appId, config.apiKey);
         const index = client.initIndex(iX);
         try {
             while (true) {
@@ -47,10 +57,14 @@ export default class Bootstrap {
                     return omit(hit, ['objectID', '_highlightResult']);
                 });
 
-                console.table(resultArr);
+                resultArr.length > 0
+                    ? resultArr.forEach((result) => {
+                        console.log(JSON.stringify(result, null, 2));
+                    })
+                    : logger.info('No results found!');
             }
-            setEnv('APP_ID', appId);
-            setEnv('API_KEY', apiKey);
+            setEnv('APP_ID', config.appId);
+            setEnv('API_KEY', config.apiKey);
         } catch (error: any) {
             setEnv('APP_ID', '');
             setEnv('API_KEY', '');
