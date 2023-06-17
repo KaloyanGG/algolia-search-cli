@@ -9,5 +9,8 @@
   },
   "keywords": [],
   "author": "Kaloyan Georgiev",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "log4js": "^6.9.1"
+  }
 }
