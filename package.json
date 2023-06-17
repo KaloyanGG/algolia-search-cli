@@ -11,6 +11,13 @@
   "author": "Kaloyan Georgiev",
   "license": "ISC",
   "dependencies": {
+    "algoliasearch": "^4.17.2",
+    "dotenv": "^16.3.0",
+    "lodash": "^4.17.21",
     "log4js": "^6.9.1"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.195",
+    "@types/node": "^20.3.1"
   }
 }

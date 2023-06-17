@@ -1,3 +1,5 @@
 import Bootstrap from "./bootstrap";
 
-Bootstrap.run();
+(async function f() {
+    await Bootstrap.run();
+})();
