@@ -1,11 +1,14 @@
 import { configDotenv } from "dotenv";
 import readline from 'readline/promises';
-import algoliasearch from "algoliasearch";
+import algoliasearch, { SearchClient } from "algoliasearch";
 import logger from "./utilities/logger";
 import Configuration from "./types/configuration.type";
 import { omit } from "lodash";
 import setEnv from "./utilities/dotenv-changer";
 import figlet from "figlet";
+import util from "util";
+import AlgoliaService from "./services/algolia.service";
+import printFiglet from "./utilities/figlet";
 
 // import chalk from "chalk";
 
@@ -15,35 +18,38 @@ export default class Bootstrap {
 
     public static async run() {
 
-        console.log(`${figlet.textSync('Algolia CLI', {
-            horizontalLayout: 'full',
-        })}`);
-
-        // console.log("%cThis is a green text", "color:green");
+        // Printing big beautiful text
+        printFiglet();
 
         // Start cli interface
-        const rl = readline.createInterface({
+        const rl: readline.Interface = readline.createInterface({
             input: process.stdin,
             output: process.stdout,
             prompt: 'AlgoliaCLI> ',
         });
 
-        let appId = process.env.APP_ID;
-        let apiKey = process.env.API_KEY;
+        await rl.question("Please wait debugger to attach ");
 
-        if (!appId || !apiKey) {
 
-            appId = await rl.question("Welcome to Algolia CLI!\n\nPlease enter your Algolia App ID: ");
-            apiKey = await rl.question("Please enter your Algolia API Key: ");
+        // Configure credentials
+        const config = await AlgoliaService.makeConfiguration(rl);
+
+        // Check if credentials are valid
+        const client: SearchClient = algoliasearch(config.appId, config.apiKey);
+
+        //TODO Fix error where the method returns true with invalid api key
+        if (!await AlgoliaService.connectionIsOkay(client, config)) {
+            setEnv('APP_ID', '');
+            setEnv('API_KEY', '');
+            return;
         }
 
-        const config: Configuration = { appId, apiKey };
+        console.info('Thanks! Now you can start using Algolia CLI!');
 
-        const iX = await rl.question("Please enter your Algolia Index: ");
-        console.log('Thanks! Now you can start using Algolia CLI!');
+        // Getting the Algolia index(If it does not exist, ask again)
+        const index = await AlgoliaService.getIndex(rl, client);
 
-        const client = algoliasearch(config.appId, config.apiKey);
-        const index = client.initIndex(iX);
+
         try {
             while (true) {
                 const query = await rl.question("Please enter your query: ");
@@ -59,7 +65,7 @@ export default class Bootstrap {
 
                 resultArr.length > 0
                     ? resultArr.forEach((result) => {
-                        console.log(JSON.stringify(result, null, 2));
+                        console.log(util.inspect(result, { colors: true, depth: null }));
                     })
                     : logger.info('No results found!');
             }
@@ -68,6 +74,7 @@ export default class Bootstrap {
         } catch (error: any) {
             setEnv('APP_ID', '');
             setEnv('API_KEY', '');
+            logger.error(error);
             logger.error(error.message);
         }
 
