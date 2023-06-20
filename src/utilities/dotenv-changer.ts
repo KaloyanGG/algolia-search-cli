@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-export default function setEnv(key: string, value: string) {
+export function setEnv(key: string, value: string) {
     // Read the .env file
     const envFilePath = '.env';
     const envFileContent = fs.readFileSync(envFilePath, 'utf-8');
@@ -24,4 +24,9 @@ export default function setEnv(key: string, value: string) {
         updatedEnvFileContent += `${key}=\"${value}\"\n`;
     }
     fs.writeFileSync(envFilePath, updatedEnvFileContent);
+}
+
+export function resetEnvironmentVariables() {
+    setEnv('APP_ID', '');
+    setEnv('API_KEY', '');
 }
